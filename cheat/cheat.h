@@ -33,8 +33,9 @@ namespace cheat
 	void speedhackoff() noexcept;
 	extern bool isSpeedHackOn;
 
-	void getinfoon() noexcept;
-	extern bool isGetInfoOn;
+	void wallhackon() noexcept;
+	void wallhackoff() noexcept;
+	extern bool isWallHackOn;
 	extern std::uintptr_t headPtr; // Pour stocker les pointeurs vers les têtes des ennemis
 	extern std::uintptr_t entityL;
 	extern std::uintptr_t entity;

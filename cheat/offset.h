@@ -12,8 +12,8 @@ constexpr auto m_Armor = 0x03112D64;
 constexpr auto m_XCoord = 0x28;
 constexpr auto m_YCoord = 0x2C;	
 constexpr auto m_ZCoord = 0x30;
-constexpr auto m_ViewangleWidth = 0x34;
-constexpr auto m_ViewAngleHeight = 0x38;
+constexpr auto m_ViewangleY = 0x44;
+constexpr auto m_ViewAngleX = 0x40;
 constexpr auto m_iShotAmount = 0x180;
 
 constexpr auto m_vecOrigin = 0x28;
@@ -28,7 +28,6 @@ constexpr auto m_SecAmmo = 0x13C;
 constexpr auto m_recoil1 = 0x44;
 constexpr auto m_shield = 0xFC;
 constexpr auto m_Speed = 0x80;
-
 
 // Hacks
 constexpr auto rapidFire = 0x164;

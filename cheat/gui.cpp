@@ -12,6 +12,7 @@ bool gui::isNoRecoilOn = false;
 bool gui::isInfShieldOn = false;
 bool gui::isGetInfoOn = false;
 bool gui::isSpeedHackOn = false;
+bool gui::isWallHackOn = false;
 int gui::updatedHealth = 0;
 int gui::updatedNade = 0;
 int gui::updatedAmmo = 0;
@@ -191,10 +192,29 @@ void gui::CreateImGui() noexcept
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ::ImGui::GetIO();
-
 	io.IniFilename = NULL;
 
-	ImGui::StyleColorsDark();
+	ImGui::StyleColorsDark(); // Thème de base sombre
+	ImGuiStyle& style = ImGui::GetStyle(); // Récupérer le style
+
+	// Modifications du style
+	style.WindowRounding = 5.0f;
+	style.FrameRounding = 50.0f;
+	style.ScrollbarRounding = 3.0f;
+
+	// Couleurs personnalisées
+	style.Colors[ImGuiCol_WindowBg] = ImVec4(0.10f, 0.05f, 0.05f, 1.0f);
+	style.Colors[ImGuiCol_Button] = ImVec4(0.72f, 0.20f, 0.20f, 1.0f);
+	style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.90f, 0.30f, 0.30f, 1.0f);
+	style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.60f, 0.10f, 0.10f, 1.0f);
+
+	// Couleurs des Checkboxes
+	style.Colors[ImGuiCol_FrameBg] = ImVec4(0.30f, 0.05f, 0.05f, 1.0f);
+	style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.60f, 0.10f, 0.10f, 1.0f);
+	style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.80f, 0.20f, 0.20f, 1.0f);
+	style.Colors[ImGuiCol_CheckMark] = ImVec4(0.90f, 0.30f, 0.30f, 1.0f);
+
+
 
 	ImGui_ImplWin32_Init(window);
 	ImGui_ImplDX9_Init(device);
@@ -302,30 +322,27 @@ void gui::RenderTrainerTab() noexcept
 }
 
 void gui::RenderAimbotTab() noexcept {
-	if (ImGui::Checkbox("Show Info##Checkbox", &cheat::isGetInfoOn)) {
-		// Pas besoin de condition supplémentaire ici si getinfoon gère déjà isGetInfoOn
-	}
+	//if (ImGui::Checkbox("Show Info##Checkbox", &cheat::isWallHackOn)) {
+	//	// Pas besoin de condition supplémentaire ici si getinfoon gère déjà isGetInfoOn
+	//}
 
-	if (cheat::isGetInfoOn) {
-		ImGui::Begin("Entity Info", nullptr);
-		ImGui::Text("EntityList : 0x%p", reinterpret_cast<void*>(cheat::entityL));
-		ImGui::Text("entity: 0x%p", reinterpret_cast<void*>(cheat::entity));
-		ImGui::Text("Head Value: %f", cheat::headValue); // Pour un int
-		ImGui::End();
-	}
+	//if (cheat::isWallHackOn) {
+	//	ImGui::Begin("Entity Info", nullptr);
+	//	ImGui::Text("EntityList : 0x%p", reinterpret_cast<void*>(cheat::entityL));
+	//	ImGui::Text("entity: 0x%p", reinterpret_cast<void*>(cheat::entity));
+	//	ImGui::Text("Head Value: %f", cheat::headValue); // Pour un int
+	//	ImGui::End();
+	//}
 }
-
-
-
 
 void gui::RenderESPTab() noexcept
 {
-	if (ImGui::Checkbox("GodMode##Checkbox", &isGodModeOn))
+	if (ImGui::Checkbox("Wallhack##Checkbox", &isWallHackOn))
 	{
-		if (isGodModeOn)
-			cheat::godmodeon();
+		if (isWallHackOn)
+			cheat::wallhackon();
 		else
-			cheat::godmodeoff();
+			cheat::wallhackoff();
 	}
 }
 

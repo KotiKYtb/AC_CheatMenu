@@ -27,8 +27,8 @@
     bool cheat::isInfAmmoOn = false;
     bool cheat::isInfShieldOn = false;
     bool cheat::isGodModeOn = false;
-    bool cheat::isGetInfoOn = false;
     bool cheat::isSpeedHackOn = false;
+    bool cheat::isWallHackOn = false;
     std::uintptr_t cheat::headPtr = 0;
     std::uintptr_t cheat::entityL = 0;
     std::uintptr_t cheat::entity = 0;
@@ -266,6 +266,16 @@
         isNoRecoilOn = false;
     }
 
-    void cheat::getinfoon() noexcept {
-        // Implémentation pour get info
+    void cheat::wallhackon() noexcept
+    {
+        if (isWallHackOn)
+            return;
+    }
+
+    void cheat::wallhackoff() noexcept
+    {
+        if (!isWallHackOn)
+            return;
+
+        isWallHackOn = false;
     }

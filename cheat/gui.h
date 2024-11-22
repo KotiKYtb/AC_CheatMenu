@@ -72,5 +72,9 @@ namespace gui
 
 	extern void getinfoon() noexcept;
 	extern bool isGetInfoOn;
+
+	extern void wallhackon() noexcept;
+	extern void wallhackoff() noexcept;
+	extern bool isWallHackOn;
 	//extern int headValue;
 }

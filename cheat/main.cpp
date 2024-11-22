@@ -13,8 +13,6 @@ int __stdcall wWinMain(
 	gui::CreateHWindow("Cheat Menu");
 	gui::CreateDevice();
 	gui::CreateImGui();
-	cheat::getinfoon();
-	
 
 	while (gui::isRunning)
 	{
