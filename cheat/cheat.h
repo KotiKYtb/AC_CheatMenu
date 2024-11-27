@@ -3,43 +3,49 @@
 
 namespace cheat
 {
-	extern int updatedHealth;
-	void godmodeon() noexcept;
-	void godmodeoff() noexcept;
-	extern bool isGodModeOn;
-	
+    extern int updatedHealth;
+    void godmodeon() noexcept;
+    void godmodeoff() noexcept;
+    extern bool isGodModeOn;
 
-	extern int updatedNade;
-	void infnadeon() noexcept;
-	void infnadeoff() noexcept;
-	extern bool isInfNadeOn;
 
-	extern int updatedAmmo;
-	extern int updatedSecAmmo;
-	void infammoon() noexcept;
-	void infammooff() noexcept;
-	extern bool isInfAmmoOn;
+    extern int updatedNade;
+    void infnadeon() noexcept;
+    void infnadeoff() noexcept;
+    extern bool isInfNadeOn;
 
-	extern int updatedShield;
-	void infshieldon() noexcept;
-	void infshieldoff() noexcept;
-	extern bool isInfShieldOn;
+    extern int updatedAmmo;
+    extern int updatedSecAmmo;
+    void infammoon() noexcept;
+    void infammooff() noexcept;
+    extern bool isInfAmmoOn;
 
-	void norecoilon() noexcept;
-	void norecoiloff() noexcept;
-	extern bool isNoRecoilOn;
+    extern int updatedShield;
+    void infshieldon() noexcept;
+    void infshieldoff() noexcept;
+    extern bool isInfShieldOn;
 
-	void speedhackon() noexcept;
-	void speedhackoff() noexcept;
-	extern bool isSpeedHackOn;
+    void norecoilon() noexcept;
+    void norecoiloff() noexcept;
+    extern bool isNoRecoilOn;
 
-	void wallhackon() noexcept;
-	void wallhackoff() noexcept;
-	extern bool isWallHackOn;
-	extern std::uintptr_t headPtr; // Pour stocker les pointeurs vers les têtes des ennemis
-	extern std::uintptr_t entityL;
-	extern std::uintptr_t entity;
-	extern float headValue;
+    void speedhackon() noexcept;
+    void speedhackoff() noexcept;
+    extern bool isSpeedHackOn;
+
+    void flyon() noexcept;
+    void flyoff() noexcept;
+    extern bool isFlyOn;
+
+    void noclipon() noexcept;
+    void noclipoff() noexcept;
+    extern bool isNoclipOn;
+
+    void wallhackon() noexcept;
+    void wallhackoff() noexcept;
+    extern bool isWallHackOn;
+    extern std::uintptr_t headPtr;
+    extern std::uintptr_t entityL;
+    extern std::uintptr_t entity;
+    extern float headValue;
 }
-
-

@@ -69,9 +69,14 @@ namespace gui
 	extern void speedhackon() noexcept;
 	extern void speedhackoff() noexcept;
 	extern bool isSpeedHackOn;
+	
+	extern void flyon() noexcept;
+	extern void flyoff() noexcept;
+	extern bool isFlyOn;
 
-	extern void getinfoon() noexcept;
-	extern bool isGetInfoOn;
+	extern void noclipon() noexcept;
+	extern void noclipoff() noexcept;
+	extern bool isNoclipOn;
 
 	extern void wallhackon() noexcept;
 	extern void wallhackoff() noexcept;

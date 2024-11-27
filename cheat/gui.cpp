@@ -10,9 +10,10 @@ bool gui::isInfNadeOn = false;
 bool gui::isInfAmmoOn = false;
 bool gui::isNoRecoilOn = false;
 bool gui::isInfShieldOn = false;
-bool gui::isGetInfoOn = false;
 bool gui::isSpeedHackOn = false;
 bool gui::isWallHackOn = false;
+bool gui::isFlyOn = false;
+bool gui::isNoclipOn = false;
 int gui::updatedHealth = 0;
 int gui::updatedNade = 0;
 int gui::updatedAmmo = 0;
@@ -319,6 +320,37 @@ void gui::RenderTrainerTab() noexcept
 		else
 			cheat::speedhackoff();
 	}
+
+	if (ImGui::Checkbox("Fly##Checkbox", &isFlyOn))
+	{
+		if (isFlyOn)
+		{
+			cheat::flyon();
+		}
+		else
+		{
+			cheat::flyoff();
+			cheat::noclipoff();
+
+		}
+	}
+
+	if (isFlyOn)
+	{
+		ImGui::Indent();
+		if (ImGui::Checkbox("Noclip##Checkbox", &isNoclipOn))
+		{
+			if (isNoclipOn)
+			{
+				cheat::noclipon();
+			}
+			else
+			{
+				cheat::noclipoff();
+			}
+		}
+		ImGui::Unindent();
+	}
 }
 
 void gui::RenderAimbotTab() noexcept {
@@ -367,11 +399,11 @@ void gui::Render() noexcept
 			ImGui::EndTabItem();
 		}
 
-		if (ImGui::BeginTabItem("Aimbot"))
+		/*if (ImGui::BeginTabItem("Aimbot"))
 		{
 			RenderAimbotTab();
 			ImGui::EndTabItem();
-		}
+		}*/
 
 		if (ImGui::BeginTabItem("ESP"))
 		{
@@ -384,4 +416,3 @@ void gui::Render() noexcept
 
 	ImGui::End();
 }
-
