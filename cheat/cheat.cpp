@@ -12,7 +12,6 @@
     #include "../cheat/cheat.h"
     #include "../imgui/imgui.h"
 
-
     int cheat::updatedHealth = 100;
     int cheat::updatedNade = 10;
     int cheat::updatedAmmo = 20;
