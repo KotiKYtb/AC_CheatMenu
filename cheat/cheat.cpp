@@ -189,7 +189,6 @@
 
         int shieldValue = memory.Read<int>(shieldAddress);
 
-        initialShield = memory.Read<int>(shieldAddress);
         isInfShieldOn = true;
 
         std::thread([&memory, shieldAddress]() {

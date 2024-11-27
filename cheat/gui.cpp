@@ -353,6 +353,24 @@ void gui::RenderTrainerTab() noexcept
 	}
 }
 
+	if (isFlyOn)
+	{
+		ImGui::Indent();
+		if (ImGui::Checkbox("Noclip##Checkbox", &isNoclipOn))
+		{
+			if (isNoclipOn)
+			{
+				cheat::noclipon();
+			}
+			else
+			{
+				cheat::noclipoff();
+			}
+		}
+		ImGui::Unindent();
+	}
+}
+
 void gui::RenderAimbotTab() noexcept {
 	//if (ImGui::Checkbox("Show Info##Checkbox", &cheat::isWallHackOn)) {
 	//	// Pas besoin de condition supplémentaire ici si getinfoon gère déjà isGetInfoOn
