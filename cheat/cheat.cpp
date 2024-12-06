@@ -6,6 +6,7 @@
     #include <chrono>
     #include <string>
     #include <sstream>
+    #include <cmath>
 
     #include "../cheat/offset.h"
     #include "../cheat/memory.h"
@@ -38,6 +39,8 @@
     bool cheat::isWallHackOn = false;
     bool cheat::isFlyOn = false;
     bool cheat::isNoclipOn = false;
+    bool cheat::isAimbotOn = false;
+
     std::uintptr_t cheat::headPtr = 0;
     std::uintptr_t cheat::entityL = 0;
     std::uintptr_t cheat::entity = 0;
@@ -197,12 +200,6 @@
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
             }).detach();
-
-        /*char buffer[100];
-        sprintf_s(buffer, sizeof(buffer), "shieldAddress: %p\nValue at address: %d",
-            (void*)TestAdress, testvalue);
-
-        MessageBoxA(NULL, buffer, "Debug", MB_OK);*/
     }
 
     void cheat::infshieldoff() noexcept
@@ -327,7 +324,7 @@
                     memory.Write<int>(jumpAddress, -290);
                 }
             }
-        }).detach();
+            }).detach();
     }
 
     void cheat::flyoff() noexcept {
@@ -354,7 +351,7 @@
                 memory.Write<float>(collisionAddress, -1.0f);
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
-            }).detach();
+        }).detach();
     }
 
     void cheat::noclipoff() noexcept {
@@ -365,7 +362,98 @@
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
         const auto collisionAddress = localPlayerPtr + m_collision;
         isNoclipOn = false;
-        memory.Write<float>(collisionAddress, 0.0f);
+        memory.Write<int>(collisionAddress, 0);
+    }
+
+    #include <fstream>
+
+    void cheat::aimbot() noexcept {
+        auto& memory = getMemory();
+        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
+        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
+
+        // Lire la position du joueur
+        float localPlayerPos[3];
+        localPlayerPos[0] = memory.Read<float>(localPlayerPtr + playerHead_XPos);
+        localPlayerPos[1] = memory.Read<float>(localPlayerPtr + playerBody_YPos);
+        localPlayerPos[2] = memory.Read<float>(localPlayerPtr + playerBody_ZPos);
+
+        float closestDistance = FLT_MAX;
+        std::uintptr_t closestEnemy = 0;
+
+        const auto entityListPtr = memory.Read<std::uintptr_t>(moduleBase + entityList);
+        const auto NumberOfPlayer = memory.Read<std::uintptr_t>(numberOfPlayer);
+        for (int i = 0; i < NumberOfPlayer; ++i) {
+            const auto enemyPtr = memory.Read<std::uintptr_t>(entityListPtr + i * sizeof(std::uintptr_t));
+            if (enemyPtr == 0 || enemyPtr == localPlayerPtr) continue;
+
+            int playerAlive = memory.Read<int>(enemyPtr + playerIsAlive);
+
+            if (playerAlive == 1) continue;
+
+            float enemyPos[3];
+            enemyPos[0] = memory.Read<float>(enemyPtr + playerHead_XPos);
+            enemyPos[1] = memory.Read<float>(enemyPtr + playerBody_YPos);
+            enemyPos[2] = memory.Read<float>(enemyPtr + playerBody_ZPos);
+
+            float deltaX = enemyPos[0] - localPlayerPos[0];
+            float deltaY = enemyPos[1] - localPlayerPos[1];
+            float deltaZ = enemyPos[2] - localPlayerPos[2];
+            float distance = std::sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestEnemy = enemyPtr;
+            }
+        }
+
+        if (closestEnemy != 0) {
+            float enemyPos[3];
+            enemyPos[0] = memory.Read<float>(closestEnemy + playerHead_XPos);
+            enemyPos[1] = memory.Read<float>(closestEnemy + playerBody_YPos);
+            enemyPos[2] = memory.Read<float>(closestEnemy + playerBody_ZPos);
+
+            // Calculer les différences de position
+            float deltaX = enemyPos[0] - localPlayerPos[0];
+            float deltaY = enemyPos[1] - localPlayerPos[1];
+            float deltaZ = enemyPos[2] - localPlayerPos[2];
+
+            // Calculer le pitch et le yaw
+            float hypotenuse = std::sqrt(deltaX * deltaX + deltaY * deltaY);
+            float pitch = std::atan2(deltaZ, hypotenuse) * (180.0f / 3.14159265358979323846f);
+            float yaw = std::atan2(deltaY, -deltaX) * (180.0f / 3.14159265358979323846f);
+
+            // Écrire les nouveaux angles de vue
+            memory.Write<float>(localPlayerPtr + m_ViewAngleX, pitch + 0.2f);
+            memory.Write<float>(localPlayerPtr + m_ViewAngleY, yaw);
+        }
+    }
+
+    void cheat::aimboton() noexcept {
+        if (isAimbotOn)
+            return;
+
+        isAimbotOn = true;
+
+        std::thread([&]() {
+            auto& memory = getMemory();
+            const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
+            const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
+
+            while (isAimbotOn) {
+                if (GetAsyncKeyState(VK_RBUTTON) & 0x8000) {
+                    aimbot();
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+            }).detach();
+    }
+
+    void cheat::aimbotoff() noexcept {
+        if (!isAimbotOn)
+            return;
+
+        isAimbotOn = false;
     }
 
     // En suspend

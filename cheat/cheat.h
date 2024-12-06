@@ -41,6 +41,11 @@ namespace cheat
     void noclipoff() noexcept;
     extern bool isNoclipOn;
 
+    void aimboton() noexcept;
+    void aimbotoff() noexcept;
+    void aimbot() noexcept;
+    extern bool isAimbotOn;
+
     void wallhackon() noexcept;
     void wallhackoff() noexcept;
     extern bool isWallHackOn;

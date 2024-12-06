@@ -2,6 +2,7 @@
 #include "cheat.h"
 #include "../cheat/memory.h"
 #include <thread>
+#include "windows.h"
 
 
 int __stdcall wWinMain(
@@ -29,4 +30,3 @@ int __stdcall wWinMain(
 
 	return EXIT_SUCCESS;
 }
-
