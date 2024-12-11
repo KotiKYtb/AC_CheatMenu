@@ -41,8 +41,6 @@ namespace gui
 	void EndRender() noexcept;
 	void Render() noexcept;
 
-	inline bool showInfoWindow = false;
-
 	// Déclarations pour les cheats
 	extern void godmodeon() noexcept;
 	extern void godmodeoff() noexcept;
@@ -87,6 +85,23 @@ namespace gui
 	extern void wallhackon() noexcept;
 	extern void wallhackoff() noexcept;
 	extern bool isWallHackOn;
+}
 
-	//extern int headValue; // Si nécessaire pour Aimbot ou ESP
+namespace overlay
+{
+	inline HWND window = nullptr;
+	inline WNDCLASSEX windowClass = {};
+	inline PDIRECT3D9 d3d = nullptr;
+	inline LPDIRECT3DDEVICE9 device = nullptr;
+	inline D3DPRESENT_PARAMETERS presentParameters = {};
+
+	void CreateOverlayWindow(const char* windowName, HWND targetWindow) noexcept;
+	void DestroyOverlayWindow() noexcept;
+
+	bool CreateDevice() noexcept;
+	void DestroyDevice() noexcept;
+
+	void BeginRender() noexcept;
+	void EndRender() noexcept;
+	void Render(HWND targetWindow) noexcept;
 }

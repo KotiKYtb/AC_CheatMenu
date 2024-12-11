@@ -6,6 +6,7 @@
     #include <chrono>
     #include <string>
     #include <sstream>
+    #include <fstream>
     #include <cmath>
 
     #include "../cheat/offset.h"
@@ -18,6 +19,7 @@
     int cheat::updatedAmmo = 20;
     int cheat::updatedSecAmmo = 20;
     int cheat::updatedShield = 25;
+    float cheat::updatedNoRecoil = 0.0f;
     int initialHealth = 0;
     int initialNade = 0;
     int initialAmmo = 0;
@@ -29,6 +31,7 @@
     int initialShield = 0;
     int initialSpeed = 0;
     int initialjump = 0;
+    float initialnorecoil = 1.0f;
     //float initialRecoil = 0.0f;
     bool cheat::isNoRecoilOn = false;
     bool cheat::isInfNadeOn = false;
@@ -266,20 +269,19 @@
         if (isNoRecoilOn)
             return;
 
-        /*auto& memory = getMemory();
+        auto& memory = getMemory();
         const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto recoilAddress = localPlayerPtr + m_ViewAngleHeight;
+        const auto recoilAddress = moduleBase + m_NoRecoil; // Adresse du recoil
 
-        initialRecoil = memory.Read<float>(recoilAddress);
         isNoRecoilOn = true;
 
         std::thread([&memory, recoilAddress]() {
             while (isNoRecoilOn) {
-                memory.Write<float>(recoilAddress, initialRecoil - 1.0f);
+                memory.Write<float>(recoilAddress, 0.0f); // Écrire la valeur pour désactiver le recoil
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
-            }).detach();*/
+            }).detach();
     }
 
     void cheat::norecoiloff() noexcept
@@ -287,7 +289,14 @@
         if (!isNoRecoilOn)
             return;
 
+        auto& memory = getMemory();
+        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
+        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
+        const auto recoilAddress = moduleBase + m_NoRecoil; // Adresse du recoil
+
         isNoRecoilOn = false;
+
+        memory.Write<float>(recoilAddress, initialnorecoil); // Rétablir la valeur initiale du recoil
     }
 
     void cheat::flyon() noexcept {
@@ -364,8 +373,6 @@
         isNoclipOn = false;
         memory.Write<int>(collisionAddress, 0);
     }
-
-    #include <fstream>
 
     void cheat::aimbot() noexcept {
         auto& memory = getMemory();

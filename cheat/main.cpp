@@ -4,29 +4,36 @@
 #include <thread>
 #include "windows.h"
 
-
-int __stdcall wWinMain(
-	HINSTANCE instance,
-	HINSTANCE previousInstance,
-	PWSTR arguments,
-	int commandShow)
+int __stdcall wWinMain(HINSTANCE instance, HINSTANCE prevInstance, PWSTR args, int cmdShow)
 {
-	gui::CreateHWindow("Cheat Menu");
-	gui::CreateDevice();
-	gui::CreateImGui();
+    HWND targetWindow = FindWindow(NULL, "AssaultCube");
+    if (!targetWindow)
+        return EXIT_FAILURE;
 
-	while (gui::isRunning)
-	{
-		gui::BeginRender();
-		gui::Render();
-		gui::EndRender();
+    gui::CreateHWindow("Cheat Menu");
+    gui::CreateDevice();
+    gui::CreateImGui();
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
-	}
+    overlay::CreateOverlayWindow("Overlay", targetWindow);
+    overlay::CreateDevice();
 
-	gui::DestroyImGui();
-	gui::DestroyDevice();
-	gui::DestroyHWindow();
+    while (gui::isRunning)
+    {
+        gui::BeginRender();
+        gui::Render();
+        gui::EndRender();
 
-	return EXIT_SUCCESS;
+        overlay::Render(targetWindow);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+
+    overlay::DestroyDevice();
+    overlay::DestroyOverlayWindow();
+
+    gui::DestroyImGui();
+    gui::DestroyDevice();
+    gui::DestroyHWindow();
+
+    return EXIT_SUCCESS;
 }

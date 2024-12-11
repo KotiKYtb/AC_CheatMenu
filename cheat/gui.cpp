@@ -1,6 +1,7 @@
 #include "gui.h"
 #include "cheat.h"
 #include "memory.h"
+#include "../cheat/offset.h"
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_impl_dx9.h"
 #include "../imgui/imgui_impl_win32.h"
@@ -437,4 +438,206 @@ void gui::Render() noexcept
 
 	ImGui::End();
 
+}
+
+void overlay::CreateOverlayWindow(const char* windowName, HWND targetWindow) noexcept
+{
+	windowClass.cbSize = sizeof(WNDCLASSEX);
+	windowClass.style = CS_CLASSDC;
+	windowClass.lpfnWndProc = DefWindowProc; // Pas d'interaction utilisateur directe
+	windowClass.cbClsExtra = 0;
+	windowClass.cbWndExtra = 0;
+	windowClass.hInstance = GetModuleHandleA(0);
+	windowClass.hIcon = 0;
+	windowClass.hCursor = 0;
+	windowClass.hbrBackground = 0;
+	windowClass.lpszMenuName = 0;
+	windowClass.lpszClassName = "OverlayClass";
+	windowClass.hIconSm = 0;
+
+	RegisterClassEx(&windowClass);
+
+	RECT targetRect;
+	GetWindowRect(targetWindow, &targetRect);
+
+	window = CreateWindowEx(
+		WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST,
+		"OverlayClass",
+		windowName,
+		WS_POPUP,
+		targetRect.left,
+		targetRect.top,
+		targetRect.right - targetRect.left,
+		targetRect.bottom - targetRect.top,
+		0,
+		0,
+		windowClass.hInstance,
+		0
+	);
+
+	SetLayeredWindowAttributes(window, RGB(0, 0, 0), 0, LWA_COLORKEY);
+	ShowWindow(window, SW_SHOWDEFAULT);
+	UpdateWindow(window);
+}
+
+void overlay::DestroyOverlayWindow() noexcept
+{
+	DestroyWindow(window);
+	UnregisterClass(windowClass.lpszClassName, windowClass.hInstance);
+}
+
+bool overlay::CreateDevice() noexcept
+{
+	d3d = Direct3DCreate9(D3D_SDK_VERSION);
+
+	if (!d3d)
+		return false;
+
+	ZeroMemory(&presentParameters, sizeof(presentParameters));
+
+	presentParameters.Windowed = TRUE;
+	presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	presentParameters.BackBufferFormat = D3DFMT_A8R8G8B8;
+	presentParameters.EnableAutoDepthStencil = TRUE;
+	presentParameters.AutoDepthStencilFormat = D3DFMT_D16;
+
+	if (d3d->CreateDevice(
+		D3DADAPTER_DEFAULT,
+		D3DDEVTYPE_HAL,
+		window,
+		D3DCREATE_HARDWARE_VERTEXPROCESSING,
+		&presentParameters,
+		&device) < 0)
+		return false;
+
+	return true;
+}
+
+void overlay::DestroyDevice() noexcept
+{
+	if (device)
+	{
+		device->Release();
+		device = nullptr;
+	}
+
+	if (d3d)
+	{
+		d3d->Release();
+		d3d = nullptr;
+	}
+}
+
+void overlay::BeginRender() noexcept
+{
+	device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0);
+	device->BeginScene();
+}
+
+void overlay::EndRender() noexcept
+{
+	device->EndScene();
+	device->Present(0, 0, 0, 0);
+}
+
+#include <cmath>
+#include <d3dx9.h>
+
+#include <d3d9.h>
+
+// Variables globales
+LPDIRECT3D9 d3d = nullptr;
+LPDIRECT3DDEVICE9 d3dDevice = nullptr;
+LPDIRECT3DVERTEXBUFFER9 vertexBuffer = nullptr;
+
+// Structure des sommets
+struct CUSTOMVERTEX
+{
+	float x, y, z, rhw; // Position
+	D3DCOLOR color;      // Couleur
+};
+
+#define D3DFVF_CUSTOMVERTEX (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
+
+// Fonction pour initialiser Direct3D
+void InitializeDirect3D(HWND hwnd)
+{
+	d3d = Direct3DCreate9(D3D_SDK_VERSION);
+	if (!d3d) return;
+
+	D3DPRESENT_PARAMETERS d3dpp = {};
+	d3dpp.Windowed = TRUE;
+	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	d3dpp.hDeviceWindow = hwnd;
+
+	d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd,
+		D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3dDevice);
+}
+
+// Fonction pour dessiner un rectangle avec une bordure rouge et un fond transparent
+void DrawBorderedRectangle(int x, int y, int width, int height, D3DCOLOR borderColor)
+{
+	// Création des sommets pour un rectangle avec bordure
+	CUSTOMVERTEX vertices[] =
+	{
+		{ x, y, 0.0f, 1.0f, borderColor }, // Coin supérieur gauche
+		{ x + width, y, 0.0f, 1.0f, borderColor }, // Coin supérieur droit
+		{ x + width, y + height, 0.0f, 1.0f, borderColor }, // Coin inférieur droit
+		{ x, y + height, 0.0f, 1.0f, borderColor }, // Coin inférieur gauche
+	};
+
+	// Créer un vertex buffer pour le rectangle
+	if (FAILED(d3dDevice->CreateVertexBuffer(4 * sizeof(CUSTOMVERTEX), 0, D3DFVF_CUSTOMVERTEX, D3DPOOL_MANAGED, &vertexBuffer, nullptr)))
+	{
+		return;
+	}
+
+	// Copie des sommets dans le buffer
+	VOID* pVertices;
+	vertexBuffer->Lock(0, 0, (void**)&pVertices, 0);
+	memcpy(pVertices, vertices, sizeof(vertices));
+	vertexBuffer->Unlock();
+
+	// Définir le rendu de la bordure
+	d3dDevice->SetStreamSource(0, vertexBuffer, 0, sizeof(CUSTOMVERTEX));
+	d3dDevice->SetFVF(D3DFVF_CUSTOMVERTEX);
+
+	// Dessiner le rectangle (bordure)
+	d3dDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, 2); // Utiliser un triangle fan pour la bordure
+}
+
+// Méthode Render
+void overlay::Render(HWND targetWindow) noexcept
+{
+	HWND foregroundWindow = GetForegroundWindow();
+
+	if (foregroundWindow == targetWindow)
+	{
+		BeginRender();
+
+		// Dimensions de l'écran
+		RECT windowRect;
+		GetClientRect(targetWindow, &windowRect);
+		int screenWidth = windowRect.right - windowRect.left;
+		int screenHeight = windowRect.bottom - windowRect.top;
+
+		// Dimensions du rectangle
+		int rectWidth = 100;
+		int rectHeight = 50;
+		int centerX = (screenWidth - rectWidth) / 2;
+		int centerY = (screenHeight - rectHeight) / 2;
+
+		// Couleur de la bordure (rouge)
+		D3DCOLOR borderColor = D3DCOLOR_ARGB(255, 255, 0, 0);
+
+		// Dessiner le rectangle avec une bordure rouge et fond transparent
+		DrawBorderedRectangle(centerX, centerY, rectWidth, rectHeight, borderColor);
+
+		EndRender();
+	}
+	else
+	{
+		BeginRender();
+		EndRender();
+	}
 }

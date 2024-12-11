@@ -25,6 +25,7 @@ namespace cheat
     void infshieldoff() noexcept;
     extern bool isInfShieldOn;
 
+    extern float updatedNoRecoil;
     void norecoilon() noexcept;
     void norecoiloff() noexcept;
     extern bool isNoRecoilOn;

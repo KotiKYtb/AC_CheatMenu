@@ -7,7 +7,7 @@
 //constexpr auto m_vecOrigin = 0x28;
 //
 //constexpr auto iTeamNum = 0x32C;
-//constexpr auto dwViewMatrix = 0x501AE8;
+constexpr auto dwViewMatrix = 0x501AE8;
 //
 //// ammo nade function recoil
 //constexpr auto m_recoil1 = 0x44;
@@ -33,6 +33,7 @@ constexpr auto m_Ammosniper = 0x00014C;
 constexpr auto m_Ammomachinegun = 0x000148;
 constexpr auto m_Ammoshotgun = 0x000144;
 constexpr auto m_Ammocarabine = 0x000140;
+constexpr auto m_NoRecoil = 0x4ee444;
 
 constexpr auto m_shield = 0x0000FC;
 constexpr auto m_Speed = 0x000080;
