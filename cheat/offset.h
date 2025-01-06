@@ -33,7 +33,8 @@ constexpr auto m_Ammosniper = 0x00014C;
 constexpr auto m_Ammomachinegun = 0x000148;
 constexpr auto m_Ammoshotgun = 0x000144;
 constexpr auto m_Ammocarabine = 0x000140;
-constexpr auto m_NoRecoil = 0x4ee444;
+constexpr auto m_NoRecoil = 0x00004C;
+constexpr auto m_AutoShoot = 0x000224;
 
 constexpr auto m_shield = 0x0000FC;
 constexpr auto m_Speed = 0x000080;
