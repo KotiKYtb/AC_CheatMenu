@@ -14,12 +14,6 @@
     #include "../cheat/cheat.h"
     #include "../imgui/imgui.h"
 
-    int cheat::updatedHealth = 100;
-    int cheat::updatedNade = 10;
-    int cheat::updatedAmmo = 20;
-    int cheat::updatedSecAmmo = 20;
-    int cheat::updatedShield = 25;
-    float cheat::updatedNoRecoil = 0.0f;
     int initialHealth = 0;
     int initialNade = 0;
     int initialAmmo = 0;
