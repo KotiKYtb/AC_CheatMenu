@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <string_view>
 
-
-
 class Memory
 {
 private:
@@ -74,8 +72,7 @@ public:
 
 	// Read Process Memory
 	template <typename T>
-	constexpr const T Read(const std::uintptr_t& address) const noexcept
-	{
+	constexpr const T Read(const std::uintptr_t& address) const noexcept {
 		T value = { };
 		::ReadProcessMemory(processHandle, reinterpret_cast<const void*>(address), &value, sizeof(T), NULL);
 		return value;
@@ -100,6 +97,11 @@ public:
 	// Dans votre classe Memory, ajoutez une méthode pour changer la protection de la mémoire
 	bool ChangeMemoryProtection(const std::uintptr_t& address, SIZE_T size, DWORD newProtect, DWORD& oldProtect) const noexcept {
 		return ::VirtualProtectEx(processHandle, reinterpret_cast<LPVOID>(address), size, newProtect, &oldProtect) != 0;
+	}
+
+	void ReadArray(std::uintptr_t address, void* buffer, size_t size) const noexcept
+	{
+		::ReadProcessMemory(processHandle, reinterpret_cast<const void*>(address), buffer, size, nullptr);
 	}
 
 };

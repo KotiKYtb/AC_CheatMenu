@@ -5,6 +5,13 @@
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_impl_dx9.h"
 #include "../imgui/imgui_impl_win32.h"
+#include <d3d9.h>
+#include <d3dx9.h>
+#include <string>
+#include <vector>
+#include <cmath>
+#include <fstream>
+#include <iomanip>
 
 bool gui::isGodModeOn = false;
 bool gui::isInfNadeOn = false;
@@ -16,10 +23,7 @@ bool gui::isWallHackOn = false;
 bool gui::isFlyOn = false;
 bool gui::isNoclipOn = false;
 bool gui::isAimbotOn = false;
-int gui::updatedHealth = 0;
-int gui::updatedNade = 0;
-int gui::updatedAmmo = 0;
-int gui::updatedShield = 0;
+bool gui::isAutoShootOn = false;
 Memory memory("ac_client.exe");
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
@@ -200,9 +204,6 @@ void gui::CreateImGui() noexcept
 	ImGui::StyleColorsDark();
 	ImGuiStyle& style = ImGui::GetStyle();
 
-	style.WindowRounding = 10.0f;
-	style.PopupRounding = 8.0f;
-	style.WindowBorderSize = 1.0f;
 	style.ItemSpacing = ImVec2(8, 6);
 
 	ImVec4* colors = style.Colors;
@@ -284,7 +285,7 @@ bool ToggleButton(const char* label, bool* value, const ImVec2& size = ImVec2(0,
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, *value ? ImVec4(0.0f, 0.8f, 0.0f, 1.0f) : ImVec4(0.8f, 0.0f, 0.0f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_ButtonActive, *value ? ImVec4(0.0f, 0.6f, 0.0f, 1.0f) : ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
 
-	ImGui::PushStyleColor(ImGuiCol_Text, *value ? ImVec4(1.0f, 1.0f, 1.0f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_Text, *value ? ImVec4(0.0f, 0.0f, 0.0f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
 
 	bool clicked = ImGui::Button(label, size);
 	if (clicked)
@@ -292,7 +293,7 @@ bool ToggleButton(const char* label, bool* value, const ImVec2& size = ImVec2(0,
 
 	ImGui::PopStyleColor(4);
 
-	ImGui::SetWindowFontScale(1.0f);
+	ImGui::SetWindowFontScale(1.2f);
 
 	return clicked;
 }
@@ -364,6 +365,22 @@ void gui::RenderTrainerTab() noexcept
 		else
 			cheat::aimbotoff();
 	}
+
+	if (ToggleButton("No Recoil##Toggle", &isNoRecoilOn))
+	{
+		if (isNoRecoilOn)
+			cheat::norecoilon();
+		else
+			cheat::norecoiloff();
+	}
+
+	if (ToggleButton("AutoShoot##Toggle", &isAutoShootOn))
+	{
+		if (isAutoShootOn)
+			cheat::autoshooton();
+		else
+			cheat::autoshootoff();
+	}
 }
 
 // En dev
@@ -376,14 +393,6 @@ void gui::RenderAimbotTab() noexcept
 			cheat::speedhackon();
 		else
 			cheat::speedhackoff();
-	}
-
-	if (ToggleButton("No Recoil##Toggle", &isNoRecoilOn))
-	{
-		if (isNoRecoilOn)
-			cheat::norecoilon();
-		else
-			cheat::norecoiloff();
 	}
 }
 
@@ -405,7 +414,7 @@ void gui::Render() noexcept
 	ImGui::SetNextWindowPos({ 0, 0 });
 	ImGui::SetNextWindowSize({ WIDTH, HEIGHT });
 	ImGui::Begin(
-		"Assault cube cheat menu BY Théo/Louis/Benjamin/Martial/Doriska",
+		"AssaultCube | Cheat",
 		&isRunning,
 		ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoSavedSettings |
@@ -440,11 +449,13 @@ void gui::Render() noexcept
 
 }
 
+LPD3DXFONT font = nullptr;
+
 void overlay::CreateOverlayWindow(const char* windowName, HWND targetWindow) noexcept
 {
 	windowClass.cbSize = sizeof(WNDCLASSEX);
 	windowClass.style = CS_CLASSDC;
-	windowClass.lpfnWndProc = DefWindowProc; // Pas d'interaction utilisateur directe
+	windowClass.lpfnWndProc = DefWindowProc;
 	windowClass.cbClsExtra = 0;
 	windowClass.cbWndExtra = 0;
 	windowClass.hInstance = GetModuleHandleA(0);
@@ -478,6 +489,14 @@ void overlay::CreateOverlayWindow(const char* windowName, HWND targetWindow) noe
 	SetLayeredWindowAttributes(window, RGB(0, 0, 0), 0, LWA_COLORKEY);
 	ShowWindow(window, SW_SHOWDEFAULT);
 	UpdateWindow(window);
+
+	overlay::d3d = Direct3DCreate9(D3D_SDK_VERSION);
+	if (!overlay::d3d) {
+		MessageBox(window, "Failed to initialize Direct3D", "Error", MB_OK);
+		return;
+	}
+
+	CreateDevice();
 }
 
 void overlay::DestroyOverlayWindow() noexcept
@@ -488,11 +507,6 @@ void overlay::DestroyOverlayWindow() noexcept
 
 bool overlay::CreateDevice() noexcept
 {
-	d3d = Direct3DCreate9(D3D_SDK_VERSION);
-
-	if (!d3d)
-		return false;
-
 	ZeroMemory(&presentParameters, sizeof(presentParameters));
 
 	presentParameters.Windowed = TRUE;
@@ -510,11 +524,38 @@ bool overlay::CreateDevice() noexcept
 		&device) < 0)
 		return false;
 
+	D3DXFONT_DESC fontDesc;
+	ZeroMemory(&fontDesc, sizeof(D3DXFONT_DESC));
+
+	fontDesc.Height = 20;
+	fontDesc.Width = 0;
+	fontDesc.Weight = FW_NORMAL;
+	fontDesc.MipLevels = D3DX_DEFAULT;
+	fontDesc.Italic = false;
+	fontDesc.CharSet = DEFAULT_CHARSET;
+	fontDesc.OutputPrecision = OUT_DEFAULT_PRECIS;
+	fontDesc.Quality = DEFAULT_QUALITY;
+	fontDesc.PitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+	wchar_t FaceName[32];
+	wcscpy_s(FaceName, ARRAYSIZE(FaceName), L"Arial");
+
+	if (FAILED(D3DXCreateFontIndirect(device, &fontDesc, &font)))
+	{
+		MessageBox(window, "Failed to create font", "Error", MB_OK);
+		return false;
+	}
+
 	return true;
 }
 
 void overlay::DestroyDevice() noexcept
 {
+	if (font)
+	{
+		font->Release();
+		font = nullptr;
+	}
+
 	if (device)
 	{
 		device->Release();
@@ -526,6 +567,34 @@ void overlay::DestroyDevice() noexcept
 		d3d->Release();
 		d3d = nullptr;
 	}
+
+}
+
+void overlay::DrawTextOnOverlay(const char* text, int x, int y, D3DCOLOR color) noexcept
+{
+	RECT rect;
+	SetRect(&rect, x, y, x + 300, y + 30);
+	font->DrawTextA(NULL, text, -1, &rect, DT_LEFT | DT_NOCLIP, color);
+}
+
+void DrawRectangle(IDirect3DDevice9* device, float x, float y, float width, float height, D3DCOLOR color)
+{
+	struct Vertex
+	{
+		float x, y, z, rhw;
+		D3DCOLOR color;
+	};
+
+	Vertex vertices[] =
+	{
+		{ x,         y,          0.0f, 1.0f, color },
+		{ x + width, y,          0.0f, 1.0f, color },
+		{ x,         y + height, 0.0f, 1.0f, color },
+		{ x + width, y + height, 0.0f, 1.0f, color }
+	};
+
+	device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+	device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(Vertex));
 }
 
 void overlay::BeginRender() noexcept
@@ -540,20 +609,50 @@ void overlay::EndRender() noexcept
 	device->Present(0, 0, 0, 0);
 }
 
-void overlay::Render(HWND targetWindow) noexcept
-{
+void overlay::Render(HWND targetWindow) noexcept {
 	HWND foregroundWindow = GetForegroundWindow();
 
-	if (foregroundWindow == targetWindow)
-	{
+	if (foregroundWindow == targetWindow) {
 		BeginRender();
-		ImGui::Text("Enemy");
-		ImGui::SetCursorPos(ImVec2(100, 100));  // Position du rectangle
-		ImGui::InvisibleButton("rect", ImVec2(50, 50));
+
+		auto& memory = getMemory();
+		const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
+		const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
+
+		float localPlayerPos[3];
+		localPlayerPos[0] = memory.Read<float>(localPlayerPtr + playerBody_XPos);
+		localPlayerPos[1] = memory.Read<float>(localPlayerPtr + playerBody_YPos);
+		localPlayerPos[2] = memory.Read<float>(localPlayerPtr + playerBody_ZPos);
+
+		float closestDistance = FLT_MAX;
+		std::uintptr_t closestEnemy = 0;
+
+		const auto entityListPtr = memory.Read<std::uintptr_t>(moduleBase + entityList);
+		const auto NumberOfPlayer = memory.Read<std::uintptr_t>(numberOfPlayer);
+		for (int i = 0; i < NumberOfPlayer; ++i) {
+			const auto enemyPtr = memory.Read<std::uintptr_t>(entityListPtr + i * sizeof(std::uintptr_t));
+			if (enemyPtr == 0 || enemyPtr == localPlayerPtr) continue;
+			int TeamNum_Player = memory.Read<int>(localPlayerPtr + m_TeamNum);
+
+			int playerAlive = memory.Read<int>(enemyPtr + playerIsAlive);
+			int TeamNum_Enemy = memory.Read<int>(enemyPtr + m_TeamNum);
+
+			float enemyPos[3];
+			enemyPos[0] = memory.Read<float>(enemyPtr + playerBody_XPos);
+			enemyPos[1] = memory.Read<float>(enemyPtr + playerBody_YPos);
+			enemyPos[2] = memory.Read<float>(enemyPtr + playerBody_ZPos);
+
+			float deltaX = enemyPos[0] - localPlayerPos[0];
+			float deltaY = enemyPos[1] - localPlayerPos[1];
+			float deltaZ = enemyPos[2] - localPlayerPos[2];
+			float distance = std::sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+
+			DrawRectangle(device, enemyPos[0], enemyPos[1], 250 * (distance / 100), 500 * (distance / 100), D3DCOLOR_ARGB(255, 255, 0, 0));
+		}
+
 		EndRender();
 	}
-	else
-	{
+	else {
 		BeginRender();
 		EndRender();
 	}

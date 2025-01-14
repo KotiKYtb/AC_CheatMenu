@@ -25,7 +25,6 @@ int __stdcall wWinMain(HINSTANCE instance, HINSTANCE prevInstance, PWSTR args, i
 
         overlay::Render(targetWindow);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 
     overlay::DestroyDevice();

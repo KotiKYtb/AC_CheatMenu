@@ -45,22 +45,18 @@ namespace gui
 	extern void godmodeon() noexcept;
 	extern void godmodeoff() noexcept;
 	extern bool isGodModeOn;
-	extern int updatedHealth;
 
 	extern void infnadeon() noexcept;
 	extern void infnadeoff() noexcept;
 	extern bool isInfNadeOn;
-	extern int updatedNade;
 
 	extern void infammoon() noexcept;
 	extern void infammooff() noexcept;
 	extern bool isInfAmmoOn;
-	extern int updatedAmmo;
 
 	extern void infshieldoon() noexcept;
 	extern void infshieldoff() noexcept;
 	extern bool isInfShieldOn;
-	extern int updatedShield;
 
 	extern void norecoilon() noexcept;
 	extern void norecoiloff() noexcept;
@@ -85,6 +81,10 @@ namespace gui
 	extern void wallhackon() noexcept;
 	extern void wallhackoff() noexcept;
 	extern bool isWallHackOn;
+
+	extern void autoshooton() noexcept;
+	extern void autoshootoff() noexcept;
+	extern bool isAutoShootOn;
 }
 
 namespace overlay
@@ -100,6 +100,8 @@ namespace overlay
 
 	bool CreateDevice() noexcept;
 	void DestroyDevice() noexcept;
+
+	void DrawTextOnOverlay(const char* text, int x, int y, D3DCOLOR color) noexcept;
 
 	void BeginRender() noexcept;
 	void EndRender() noexcept;

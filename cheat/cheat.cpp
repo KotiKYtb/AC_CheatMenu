@@ -25,23 +25,29 @@
     int initialShield = 0;
     int initialSpeed = 0;
     int initialjump = 0;
-    float initialnorecoil = 1.0f;
-    //float initialRecoil = 0.0f;
-    bool cheat::isNoRecoilOn = false;
-    bool cheat::isInfNadeOn = false;
-    bool cheat::isInfAmmoOn = false;
-    bool cheat::isInfShieldOn = false;
-    bool cheat::isGodModeOn = false;
-    bool cheat::isSpeedHackOn = false;
-    bool cheat::isWallHackOn = false;
-    bool cheat::isFlyOn = false;
-    bool cheat::isNoclipOn = false;
-    bool cheat::isAimbotOn = false;
 
-    std::uintptr_t cheat::headPtr = 0;
-    std::uintptr_t cheat::entityL = 0;
-    std::uintptr_t cheat::entity = 0;
-    float cheat::headValue = 0.0f;
+    std::atomic<bool> isNoRecoilOn = false;
+    std::thread norecoilThread;
+    std::atomic<bool> isInfNadeOn = false;
+    std::thread infnadeThread;
+    std::atomic<bool> isInfAmmoOn = false;
+    std::thread infammoThread;
+    std::atomic<bool> isInfShieldOn = false;
+    std::thread infshieldThread;
+    std::atomic<bool> isGodModeOn = false;
+    std::thread godmodeThread;
+    std::atomic<bool> isSpeedHackOn = false;
+    std::thread speedhackThread;
+    std::atomic<bool> isWallHackOn = false;
+    std::thread wallhackThread;
+    std::atomic<bool> isFlyOn = false;
+    std::thread flyThread;
+    std::atomic<bool> isNoclipOn = false;
+    std::thread noclipThread;
+    std::atomic<bool> isAimbotOn = false;
+    std::thread aimbotThread;
+    std::atomic<bool> isAutoShootOn = false;
+    std::thread autoshootThread;
 
     void cheat::godmodeon() noexcept
     {
@@ -53,15 +59,16 @@
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
         const auto healthAddress = localPlayerPtr + m_iHealth;
 
-        initialHealth = memory.Read<int>(healthAddress);
         isGodModeOn = true;
 
-        std::thread([&memory, healthAddress]() {
+        godmodeThread = std::thread([&memory, healthAddress]() {
             while (isGodModeOn) {
+                if (!isGodModeOn) {
+                    break;
+                }
                 memory.Write<int>(healthAddress, 100);
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
-            }).detach();
+            });
     }
 
     void cheat::godmodeoff() noexcept
@@ -69,14 +76,10 @@
         if (!isGodModeOn)
             return;
 
-        auto& memory = getMemory();
-        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
-        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto healthAddress = localPlayerPtr + m_iHealth;
-
         isGodModeOn = false;
 
-        memory.Write<int>(healthAddress, initialHealth);
+        if (godmodeThread.joinable())
+            godmodeThread.join();
     }
 
     void cheat::infnadeon() noexcept
@@ -89,15 +92,16 @@
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
         const auto nadesAddress = localPlayerPtr + m_Nades;
 
-        initialNade = memory.Read<int>(nadesAddress);
         isInfNadeOn = true;
 
-        std::thread([&memory, nadesAddress]() {
+        infnadeThread = std::thread([&memory, nadesAddress]() {
             while (isInfNadeOn) {
+                if (!isInfNadeOn) {
+                    break;
+                }
                 memory.Write<int>(nadesAddress, 10);
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
-            }).detach();
+            });
     }
 
     void cheat::infnadeoff() noexcept
@@ -105,14 +109,10 @@
         if (!isInfNadeOn)
             return;
 
-        auto& memory = getMemory();
-        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
-        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto nadesAddress = localPlayerPtr + m_Nades;
-
         isInfNadeOn = false;
 
-        memory.Write<int>(nadesAddress, initialNade);
+        if (infnadeThread.joinable())
+            infnadeThread.join();
     }
 
     void cheat::infammoon() noexcept
@@ -130,25 +130,21 @@
         const auto shotgunAmmoAddress = localPlayerPtr + m_Ammoshotgun;
         const auto carabineAmmoAddress = localPlayerPtr + m_Ammocarabine;
 
-        initialAmmo = memory.Read<int>(ammoAddress);
-        initialAmmosniper = memory.Read<int>(sniperAmmoAddress);
-        initialAmmomachinegun = memory.Read<int>(machinegunAmmoAddress);
-        initialAmmoshotgun = memory.Read<int>(shotgunAmmoAddress);
-        initialSecAmmo = memory.Read<int>(secAmmoAddress);
-        initialAmmocarabine = memory.Read<int>(carabineAmmoAddress);
         isInfAmmoOn = true;
 
-        std::thread([&memory, ammoAddress, secAmmoAddress, sniperAmmoAddress, machinegunAmmoAddress, shotgunAmmoAddress, carabineAmmoAddress]() {
+        infammoThread = std::thread([&memory, ammoAddress, secAmmoAddress, sniperAmmoAddress, machinegunAmmoAddress, shotgunAmmoAddress, carabineAmmoAddress]() {
             while (isInfAmmoOn) {
-                memory.Write<int>(ammoAddress, 20);      // Munitions principales infinies
+                if (!isInfAmmoOn) {
+                    break;
+                }
+                memory.Write<int>(ammoAddress, 20);
                 memory.Write<int>(secAmmoAddress, 20);
                 memory.Write<int>(sniperAmmoAddress, 20);
                 memory.Write<int>(machinegunAmmoAddress, 20);
                 memory.Write<int>(shotgunAmmoAddress, 20);
                 memory.Write<int>(carabineAmmoAddress, 20);
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
-            }).detach();
+            });
     }
 
     void cheat::infammooff() noexcept
@@ -156,25 +152,11 @@
         if (!isInfAmmoOn)
             return;
 
-        auto& memory = getMemory();
-        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
-        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto ammoAddress = localPlayerPtr + m_Ammorifle;
-        const auto secAmmoAddress = localPlayerPtr + m_SecAmmo;
-        const auto sniperAmmoAddress = localPlayerPtr + m_Ammosniper;
-        const auto machinegunAmmoAddress = localPlayerPtr + m_Ammomachinegun;
-        const auto shotgunAmmoAddress = localPlayerPtr + m_Ammoshotgun;
-        const auto carabineAmmoAddress = localPlayerPtr + m_Ammocarabine;
 
         isInfAmmoOn = false;
 
-        // Rétablir les valeurs originales des munitions
-        memory.Write<int>(ammoAddress, initialAmmo);
-        memory.Write<int>(secAmmoAddress, initialSecAmmo);
-        memory.Write<int>(sniperAmmoAddress, initialAmmosniper);
-        memory.Write<int>(machinegunAmmoAddress, initialAmmomachinegun);
-        memory.Write<int>(shotgunAmmoAddress, initialAmmoshotgun);
-        memory.Write<int>(carabineAmmoAddress, initialAmmocarabine);
+        if (infammoThread.joinable())
+            infammoThread.join();
     }
 
     void cheat::infshieldon() noexcept
@@ -187,16 +169,16 @@
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
         const auto shieldAddress = localPlayerPtr + m_shield;
 
-        int shieldValue = memory.Read<int>(shieldAddress);
-
         isInfShieldOn = true;
 
-        std::thread([&memory, shieldAddress]() {
+        infshieldThread = std::thread([&memory, shieldAddress]() {
             while (isInfShieldOn) {
-                memory.Write<int>(shieldAddress, 20);
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                if (!isInfShieldOn) {
+                    break;
+                }
+                memory.Write<int>(shieldAddress, 100);
             }
-            }).detach();
+            });
     }
 
     void cheat::infshieldoff() noexcept
@@ -204,14 +186,10 @@
         if (!isInfShieldOn)
             return;
 
-        auto& memory = getMemory();
-        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
-        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto shieldAddress = localPlayerPtr + m_shield;
-
         isInfShieldOn = false;
 
-        memory.Write<int>(shieldAddress, initialShield);
+        if (infshieldThread.joinable())
+            infshieldThread.join();
     }
 
     void cheat::speedhackon() noexcept
@@ -224,38 +202,29 @@
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
         const auto speedAddress = localPlayerPtr + m_Speed;
 
-        initialSpeed = memory.Read<int>(speedAddress);
         isSpeedHackOn = true;
 
-        std::thread([&memory, speedAddress]() {
+        speedhackThread = std::thread([&memory, speedAddress]() {
             while (isSpeedHackOn) {
+                if (!isSpeedHackOn) {
+                    break;
+                }
                 if (GetAsyncKeyState('Z') & 0x8000) {
                     memory.Write<int>(speedAddress, 3);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 }
             }
-            }).detach();
+            });
     }
 
     void cheat::speedhackoff() noexcept {
         if (!isSpeedHackOn)
             return;
 
-        auto& memory = getMemory();
-        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
-        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto speedAddress = localPlayerPtr + m_Speed;
-
         isSpeedHackOn = false;
 
-        std::thread([&memory, speedAddress]() {
-            while (isSpeedHackOn) {
-                if (GetAsyncKeyState('Z') & 0x8000) {
-                    memory.Write<int>(speedAddress, 1);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                }
-            }
-            }).detach();
+        if (speedhackThread.joinable())
+            speedhackThread.join();
+
     }
 
     void cheat::norecoilon() noexcept
@@ -266,16 +235,18 @@
         auto& memory = getMemory();
         const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto recoilAddress = moduleBase + m_NoRecoil; // Adresse du recoil
+        const auto RecoilAddress = localPlayerPtr + m_NoRecoil;
+        const int recoilValue = 100;
 
         isNoRecoilOn = true;
 
-        std::thread([&memory, recoilAddress]() {
+        norecoilThread = std::thread([&memory, RecoilAddress, recoilValue]() {
             while (isNoRecoilOn) {
-                memory.Write<float>(recoilAddress, 0.0f); // Écrire la valeur pour désactiver le recoil
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                if (!isNoRecoilOn)
+                    break;
+                memory.Write(RecoilAddress, recoilValue);
             }
-            }).detach();
+            });
     }
 
     void cheat::norecoiloff() noexcept
@@ -283,14 +254,10 @@
         if (!isNoRecoilOn)
             return;
 
-        auto& memory = getMemory();
-        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
-        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto recoilAddress = moduleBase + m_NoRecoil; // Adresse du recoil
-
         isNoRecoilOn = false;
 
-        memory.Write<float>(recoilAddress, initialnorecoil); // Rétablir la valeur initiale du recoil
+        if (norecoilThread.joinable())
+            norecoilThread.join();
     }
 
     void cheat::flyon() noexcept {
@@ -300,22 +267,13 @@
         const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
         const auto jumpAddress = localPlayerPtr + m_superjump;
-        initialjump = memory.Read<int>(jumpAddress);
-        isFlyOn = true;
-        std::thread([&memory, jumpAddress]() {
-            while (isFlyOn) {
 
-                if (GetAsyncKeyState('Z') & 0x8000) {
-                    if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-                        memory.Write<int>(jumpAddress, -600);
-                    }
-                    else if (GetAsyncKeyState(VK_LCONTROL) & 0x8000) {
-                        memory.Write<int>(jumpAddress, 200);
-                    }
-                    else {
-                        memory.Write<int>(jumpAddress, -315);
-                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                    }
+        isFlyOn = true;
+        
+        flyThread = std::thread([&memory, jumpAddress]() {
+            while (isFlyOn) {
+                if (!isFlyOn) {
+                    break;
                 }
                 else if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
                     memory.Write<int>(jumpAddress, -600);
@@ -327,18 +285,17 @@
                     memory.Write<int>(jumpAddress, -290);
                 }
             }
-            }).detach();
+            });
     }
 
     void cheat::flyoff() noexcept {
         if (!isFlyOn)
             return;
-        auto& memory = getMemory();
-        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
-        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto jumpAddress = localPlayerPtr + m_superjump;
+
         isFlyOn = false;
-        memory.Write<int>(jumpAddress, initialjump);
+        
+        if (flyThread.joinable())
+            flyThread.join();
     }
 
     void cheat::noclipon() noexcept {
@@ -347,25 +304,33 @@
         auto& memory = getMemory();
         const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto collisionAddress = localPlayerPtr + m_collision;
+        const auto collisionAddress = localPlayerPtr + m_Collision;
         isNoclipOn = true;
-        std::thread([&memory, collisionAddress]() {
+        noclipThread = std::thread([&memory, collisionAddress]() {
             while (isNoclipOn) {
+                if (!isNoclipOn) {
+                    break;
+                }
                 memory.Write<float>(collisionAddress, -1.0f);
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
-        }).detach();
+        });
     }
 
     void cheat::noclipoff() noexcept {
         if (!isNoclipOn)
             return;
+        
+        isNoclipOn = false;
+
+        if (noclipThread.joinable())
+            noclipThread.join();
+
         auto& memory = getMemory();
         const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-        const auto collisionAddress = localPlayerPtr + m_collision;
-        isNoclipOn = false;
-        memory.Write<int>(collisionAddress, 0);
+        const auto collisionAddress = localPlayerPtr + m_Collision;
+
+        memory.Write<float>(collisionAddress, 1.1f);
     }
 
     void cheat::aimbot() noexcept {
@@ -373,7 +338,6 @@
         const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
         const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
 
-        // Lire la position du joueur
         float localPlayerPos[3];
         localPlayerPos[0] = memory.Read<float>(localPlayerPtr + playerHead_XPos);
         localPlayerPos[1] = memory.Read<float>(localPlayerPtr + playerBody_YPos);
@@ -387,10 +351,13 @@
         for (int i = 0; i < NumberOfPlayer; ++i) {
             const auto enemyPtr = memory.Read<std::uintptr_t>(entityListPtr + i * sizeof(std::uintptr_t));
             if (enemyPtr == 0 || enemyPtr == localPlayerPtr) continue;
+            int TeamNum_Player = memory.Read<int>(localPlayerPtr + m_TeamNum);
 
             int playerAlive = memory.Read<int>(enemyPtr + playerIsAlive);
+            int TeamNum_Enemy = memory.Read<int>(enemyPtr + m_TeamNum);
 
             if (playerAlive == 1) continue;
+            if (TeamNum_Enemy == TeamNum_Player) continue;
 
             float enemyPos[3];
             enemyPos[0] = memory.Read<float>(enemyPtr + playerHead_XPos);
@@ -414,18 +381,15 @@
             enemyPos[1] = memory.Read<float>(closestEnemy + playerBody_YPos);
             enemyPos[2] = memory.Read<float>(closestEnemy + playerBody_ZPos);
 
-            // Calculer les différences de position
             float deltaX = enemyPos[0] - localPlayerPos[0];
             float deltaY = enemyPos[1] - localPlayerPos[1];
             float deltaZ = enemyPos[2] - localPlayerPos[2];
 
-            // Calculer le pitch et le yaw
             float hypotenuse = std::sqrt(deltaX * deltaX + deltaY * deltaY);
             float pitch = std::atan2(deltaZ, hypotenuse) * (180.0f / 3.14159265358979323846f);
             float yaw = std::atan2(deltaY, -deltaX) * (180.0f / 3.14159265358979323846f);
 
-            // Écrire les nouveaux angles de vue
-            memory.Write<float>(localPlayerPtr + m_ViewAngleX, pitch + 0.2f);
+            memory.Write<float>(localPlayerPtr + m_ViewAngleX, pitch);
             memory.Write<float>(localPlayerPtr + m_ViewAngleY, yaw);
         }
     }
@@ -436,18 +400,16 @@
 
         isAimbotOn = true;
 
-        std::thread([&]() {
-            auto& memory = getMemory();
-            const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
-            const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
-
+        aimbotThread = std::thread([&]() {
             while (isAimbotOn) {
+                if (!isAimbotOn) {
+                    break;
+                }
                 if (GetAsyncKeyState(VK_RBUTTON) & 0x8000) {
                     aimbot();
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
-            }).detach();
+            });
     }
 
     void cheat::aimbotoff() noexcept {
@@ -455,6 +417,40 @@
             return;
 
         isAimbotOn = false;
+
+        if (aimbotThread.joinable())
+            aimbotThread.join();
+    }
+
+    void cheat::autoshooton() noexcept
+    {
+        if (isAutoShootOn)
+            return;
+
+        auto& memory = getMemory();
+        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
+        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
+        const auto AutoShootAddress = localPlayerPtr + m_AutoShoot;
+
+        isAutoShootOn = true;
+
+        autoshootThread = std::thread([&memory, AutoShootAddress]() {
+            while (isAutoShootOn) {
+                if (!isAutoShootOn) {
+                    break;
+                }
+                memory.Write<int>(AutoShootAddress, 1);
+            }
+            });
+    }
+
+    void cheat::autoshootoff() noexcept
+    {
+        if (!isAutoShootOn)
+            return;
+
+        isAutoShootOn = false;
+
     }
 
     // En suspend
