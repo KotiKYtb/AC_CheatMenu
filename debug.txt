@@ -1,0 +1,2 @@
+Local Player Position: X=115.70 Y=164.12 Z=1.50
+Test Rectangle Position:

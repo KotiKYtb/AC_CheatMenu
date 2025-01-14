@@ -17,6 +17,7 @@ constexpr auto playerBody_ZPos = 0x00003C;
 constexpr auto playerHead_XPos = 0x000008;
 constexpr auto playerHead_YPos = 0x000004;
 constexpr auto playerHead_ZPos = 0x00000C;
+constexpr auto viewMatrixOff = 0x501AE8;
 
 constexpr auto m_Nades = 0x000158;
 constexpr auto m_Ammorifle = 0x000150;
