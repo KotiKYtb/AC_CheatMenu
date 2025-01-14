@@ -14,6 +14,11 @@
     #include "../cheat/cheat.h"
     #include "../imgui/imgui.h"
 
+<<<<<<< HEAD
+// comment
+
+=======
+>>>>>>> NewVersion
     int initialHealth = 0;
     int initialNade = 0;
     int initialAmmo = 0;
