@@ -36,4 +36,7 @@ namespace cheat
     
     void autoshooton() noexcept;
     void autoshootoff() noexcept;
+
+    void oneshotenemyon() noexcept;
+    void oneshotenemyoff() noexcept;
 }

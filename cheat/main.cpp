@@ -21,9 +21,8 @@ int __stdcall wWinMain(HINSTANCE instance, HINSTANCE prevInstance, PWSTR args, i
     {
         gui::BeginRender();
         gui::Render();
-        gui::EndRender();
-
         overlay::Render(targetWindow);
+        gui::EndRender();
 
     }
 

@@ -7,11 +7,14 @@
 #include "../imgui/imgui_impl_win32.h"
 #include <d3d9.h>
 #include <d3dx9.h>
+#include <d3dx9math.h>
+#include <cfloat>
 #include <string>
 #include <vector>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 
 bool gui::isGodModeOn = false;
 bool gui::isInfNadeOn = false;
@@ -24,6 +27,7 @@ bool gui::isFlyOn = false;
 bool gui::isNoclipOn = false;
 bool gui::isAimbotOn = false;
 bool gui::isAutoShootOn = false;
+bool gui::isOneShotOn = false;
 Memory memory("ac_client.exe");
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
@@ -381,6 +385,14 @@ void gui::RenderTrainerTab() noexcept
 		else
 			cheat::autoshootoff();
 	}
+
+	if (ToggleButton("OneShot##Toggle", &isOneShotOn))
+	{
+		if (isOneShotOn)
+			cheat::oneshotenemyon();
+		else
+			cheat::oneshotenemyoff();
+	}
 }
 
 // En dev
@@ -394,19 +406,20 @@ void gui::RenderAimbotTab() noexcept
 		else
 			cheat::speedhackoff();
 	}
-}
 
-// En suspend
-
-void gui::RenderESPTab() noexcept
-{
-	if (ImGui::Checkbox("Wallhack##Checkbox", &isWallHackOn))
+	if (ToggleButton("WallHack##Toggle", &isWallHackOn))
 	{
 		if (isWallHackOn)
 			cheat::wallhackon();
 		else
 			cheat::wallhackoff();
 	}
+}
+
+// En suspend
+
+void gui::RenderESPTab() noexcept
+{
 }
 
 void gui::Render() noexcept
@@ -624,18 +637,18 @@ void overlay::Render(HWND targetWindow) noexcept {
 		localPlayerPos[1] = memory.Read<float>(localPlayerPtr + playerBody_YPos);
 		localPlayerPos[2] = memory.Read<float>(localPlayerPtr + playerBody_ZPos);
 
-		float closestDistance = FLT_MAX;
-		std::uintptr_t closestEnemy = 0;
-
 		const auto entityListPtr = memory.Read<std::uintptr_t>(moduleBase + entityList);
-		const auto NumberOfPlayer = memory.Read<std::uintptr_t>(numberOfPlayer);
-		for (int i = 0; i < NumberOfPlayer; ++i) {
+		const auto numberOfPlayers = memory.Read<int>(moduleBase + numberOfPlayer);
+		
+		// La feature du WallHack/ESP n'a pas pû être aboutie en raison du manque de connaissance en C++ ainsi que du manque de donnée récupérer en fouillant dans le jeux.
+
+		/*for (int i = 0; i < numberOfPlayers; ++i) {
 			const auto enemyPtr = memory.Read<std::uintptr_t>(entityListPtr + i * sizeof(std::uintptr_t));
 			if (enemyPtr == 0 || enemyPtr == localPlayerPtr) continue;
-			int TeamNum_Player = memory.Read<int>(localPlayerPtr + m_TeamNum);
 
+			int teamNumPlayer = memory.Read<int>(localPlayerPtr + m_TeamNum);
 			int playerAlive = memory.Read<int>(enemyPtr + playerIsAlive);
-			int TeamNum_Enemy = memory.Read<int>(enemyPtr + m_TeamNum);
+			int teamNumEnemy = memory.Read<int>(enemyPtr + m_TeamNum);
 
 			float enemyPos[3];
 			enemyPos[0] = memory.Read<float>(enemyPtr + playerBody_XPos);
@@ -647,8 +660,16 @@ void overlay::Render(HWND targetWindow) noexcept {
 			float deltaZ = enemyPos[2] - localPlayerPos[2];
 			float distance = std::sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
 
-			DrawRectangle(device, enemyPos[0], enemyPos[1], 250 * (distance / 100), 500 * (distance / 100), D3DCOLOR_ARGB(255, 255, 0, 0));
-		}
+			float enemyScreenPos[2];
+			enemyScreenPos[0] = (enemyPos[0]);
+			enemyScreenPos[1] = (enemyPos[1]);
+
+			DrawRectangle(device, 50, 200, 200, 200, D3DCOLOR_ARGB(255, 255, 0, 0));
+		}*/
+
+		DrawTextOnOverlay(("Positions : \nX : " + std::to_string(localPlayerPos[0]) +
+			"\nY : " + std::to_string(localPlayerPos[1]) +
+			"\nZ : " + std::to_string(localPlayerPos[2])).c_str(), 15, 550, D3DCOLOR_ARGB(255, 255, 0, 0));
 
 		EndRender();
 	}

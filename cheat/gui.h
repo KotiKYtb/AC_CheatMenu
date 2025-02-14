@@ -85,6 +85,10 @@ namespace gui
 	extern void autoshooton() noexcept;
 	extern void autoshootoff() noexcept;
 	extern bool isAutoShootOn;
+
+	extern void oneshotenemyon() noexcept;
+	extern void oneshotenemyoff() noexcept;
+	extern bool isOneShotOn;
 }
 
 namespace overlay
@@ -106,4 +110,6 @@ namespace overlay
 	void BeginRender() noexcept;
 	void EndRender() noexcept;
 	void Render(HWND targetWindow) noexcept;
+
+	extern bool isWallHackOn;
 }

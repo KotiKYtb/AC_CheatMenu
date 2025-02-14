@@ -12,6 +12,7 @@
     #include "../cheat/offset.h"
     #include "../cheat/memory.h"
     #include "../cheat/cheat.h"
+    #include "../cheat/gui.h"
     #include "../imgui/imgui.h"
 
     int initialHealth = 0;
@@ -48,6 +49,8 @@
     std::thread aimbotThread;
     std::atomic<bool> isAutoShootOn = false;
     std::thread autoshootThread;
+    std::atomic<bool> isOneShotOn = false;
+    std::thread oneshotThread;
 
     void cheat::godmodeon() noexcept
     {
@@ -457,12 +460,75 @@
 
     void cheat::wallhackon() noexcept
     {
+        if (isWallHackOn)
+            return;
 
+        isWallHackOn = true;
+
+        HWND targetWindow = FindWindow(NULL, "AssaultCube");
+        if (!targetWindow) {
+            isWallHackOn = false;
+            return;
+        }
+
+        wallhackThread = std::thread([targetWindow]() {
+            while (isWallHackOn) {
+                overlay::Render(targetWindow);
+            }
+         });
     }
 
     void cheat::wallhackoff() noexcept
     {
         if (!isWallHackOn)
-            return;
+            overlay::BeginRender();
         isWallHackOn = false;
+
+        if (wallhackThread.joinable()) {
+            wallhackThread.join();
+        }
+    }
+
+    void cheat::oneshotenemyon() noexcept
+    {
+        if (isOneShotOn)
+            return;
+
+        auto& memory = getMemory();
+        const auto moduleBase = memory.GetModuleAddress("ac_client.exe");
+        const auto localPlayerPtr = memory.Read<std::uintptr_t>(moduleBase + localPlayer);
+
+        isOneShotOn = true;
+
+        oneshotThread = std::thread([&memory, moduleBase, localPlayerPtr]() {
+            const auto entityListPtr = memory.Read<std::uintptr_t>(moduleBase + entityList);
+            const auto numberOfPlayers = memory.Read<std::uintptr_t>(numberOfPlayer);
+
+            while (isOneShotOn) {
+                for (int i = 0; i < numberOfPlayers; ++i) {
+                    const auto enemyPtr = memory.Read<std::uintptr_t>(entityListPtr + i * sizeof(std::uintptr_t));
+                    if (enemyPtr == 0 || enemyPtr == localPlayerPtr) continue;
+
+                    const int playerAlive = memory.Read<int>(enemyPtr + playerIsAlive);
+                    const int teamNumPlayer = memory.Read<int>(localPlayerPtr + m_TeamNum);
+                    const int teamNumEnemy = memory.Read<int>(enemyPtr + m_TeamNum);
+
+                    if (playerAlive == 1 || teamNumEnemy == teamNumPlayer) continue;
+
+                    const auto healthAddr = enemyPtr + m_iHealth;
+                    memory.Write<int>(healthAddr, 1);
+                }
+            }
+            });
+    }
+
+    void cheat::oneshotenemyoff() noexcept
+    {
+        if (!isOneShotOn)
+            return;
+
+        isOneShotOn = false;
+
+        if (oneshotThread.joinable())
+            oneshotThread.join();
     }
