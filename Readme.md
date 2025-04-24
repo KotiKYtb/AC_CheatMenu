@@ -65,6 +65,7 @@ Finalement, ce projet consitute un élément de notation pour notre groupe.
 - Infinite ammo for all weapons
 
 ## Demonstration
+![Capture d'écran 2025-04-24 084341](https://github.com/user-attachments/assets/80ce569c-1ade-438e-9543-88decd9a2d08)
 
-*lien de la vidéo ytb à mettre*
+
 
